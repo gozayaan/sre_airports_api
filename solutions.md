@@ -29,7 +29,7 @@ Instructions:
 Run the following commands to provision the bucket:
 
 ```
-erraform init
+terraform init
 terraform plan
 terraform apply
 ```
@@ -149,13 +149,6 @@ func main() {
 
 
 
-
-
-
-
-
-
-
 3. Containerize the Go Application
 
 Next, we’ll create a Docker image for our Go application.
@@ -197,8 +190,6 @@ Instructions:
 ```
 docker build -t gcr.io/your-gcp-project-id/airport-app:latest .
 ```
-
-
 
 
 4. Prepare a Deployment and Service Resource to Deploy in Kubernetes
