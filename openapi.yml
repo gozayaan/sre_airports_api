@@ -1,0 +1,59 @@
+openapi: "3.0.0"
+info:
+  title: Airport API
+  description: API for managing airport data
+  version: 1.0.0
+
+paths:
+  /airports:
+	get:
+  	operationId: getAirports
+  	responses:
+    	'200':
+      	description: A list of airports
+      	content:
+        	application/json:
+          	schema:
+            	type: array
+            	items:
+              	$ref: '#/components/schemas/Airport'
+
+  /airports_v2:
+	get:
+  	operationId: getAirportsV2
+  	responses:
+    	'200':
+      	description: A list of airports with extended info
+      	content:
+        	application/json:
+          	schema:
+            	type: array
+            	items:
+              	$ref: '#/components/schemas/AirportV2'
+
+components:
+  schemas:
+	Airport:
+  	type: object
+  	properties:
+    	name:
+      	type: string
+    	city:
+      	type: string
+    	iata:
+      	type: string
+    	image_url:
+      	type: string
+	AirportV2:
+  	type: object
+  	properties:
+    	name:
+      	type: string
+    	city:
+      	type: string
+    	iata:
+      	type: string
+    	image_url:
+      	type: string
+    	runway_length:
+      	type: integer
