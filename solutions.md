@@ -1,8 +1,8 @@
 1. Provision a Cloud Storage Bucket Using Infrastructure as Code (IaC)
 We'll use Terraform to provision a Google Cloud Storage (GCS) bucket.
 
-```
 Terraform Script: main.tf
+```
 provider "google" {
   project = "your-gcp-project-id"   # Replace with your GCP project ID
   region  = "us-central1"      	# Replace with your preferred region
@@ -29,7 +29,7 @@ Instructions:
 Run the following commands to provision the bucket:
 
 ```
-terraform init
+erraform init
 terraform plan
 terraform apply
 ```
@@ -39,7 +39,7 @@ terraform apply
 
 2. Make an Endpoint /update_airport_image to Update an Airport’s Image
 Next, we’ll implement an endpoint to allow uploading images for airports in our Go application.
-Go Application Code:
+Go Application Code: endpoint.go
 
 ```
 package main
@@ -148,10 +148,9 @@ func main() {
 ```
 
 
-
 3. Containerize the Go Application
 
-Next, we’ll create a Docker image for our Go application.
+Next, we’ll create a Docker image for our Go application: airport_docketfile
 
 ```
 # Use the official Golang image as the base image
@@ -184,9 +183,9 @@ CMD ["/main"]
 
 
 Instructions:
+Save the Dockerfile in the root of your Go application directory.
+Build the Docker image:
 
-	Save the Dockerfile in the root of your Go application directory.
-	Build the Docker image:
 ```
 docker build -t gcr.io/your-gcp-project-id/airport-app:latest .
 ```
@@ -227,11 +226,10 @@ spec:
     	- name: gcs-auth
       	secret:
         	secretName: gcs-auth-secret  # Ensure this secret is created with your GCS credentials
-
-
-
+```
 
 Service YAML: service.yaml
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -243,22 +241,24 @@ spec:
   	targetPort: 8080
   selector:
 	app: airport-app
-
+```
 
 Instructions:
+Ensure you have kubectl configured to point to your GKE cluster.
+Apply the deployment and service configurations:
 
-	Ensure you have kubectl configured to point to your GKE cluster.
-	Apply the deployment and service configurations:
-
+```
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
-
+```
 
 
 5. Use API Gateway to Create Routing Rules to Send 20% of Traffic to the /airports_v2 Endpoint
 Google Cloud API Gateway can manage routing rules for your application.
 Creating API Gateway Configuration:
 Create an OpenAPI Spec File: Create a file named openapi.yaml.
+
+```
 openapi: "3.0.0"
 info:
   title: Airport API
@@ -367,10 +367,3 @@ for i in {1..10}; do
   curl -X GET https://your-api-gateway-url/
 done
 ```
-
-
-
-
-
-
-
