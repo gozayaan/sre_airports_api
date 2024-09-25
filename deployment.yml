@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airport-app
+spec:
+  replicas: 3
+  selector:
+	matchLabels:
+  	app: airport-app
+  template:
+	metadata:
+  	labels:
+    	app: airport-app
+	spec:
+  	containers:
+  	- name: airport-app
+    	image: gcr.io/your-gcp-project-id/airport-app:latest
+    	ports:
+    	- containerPort: 8080
+    	env:
+      	- name: GOOGLE_APPLICATION_CREDENTIALS
+        	value: "~/secrets/faisal-terraform-key.json"
+    	volumeMounts:
+      	- name: gcs-auth
+        	mountPath: ~/secrets/faisal-terraform-key.json
+        	subPath: faisal-terraform-key.json
+
+  	volumes:
+    	- name: gcs-auth
+      	secret:
+        	secretName: gcs-auth-secret  # Ensure this secret is created with your GCS credentials
