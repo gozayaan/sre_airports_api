@@ -15,13 +15,12 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY ./ ./
+
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o /main .
 
 # multi stage with distroless image
 FROM gcr.io/distroless/base AS final
-
-# FROM alpine:3.20.1 AS final
 
 COPY --from=builder /user/group /user/passwd /etc/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
