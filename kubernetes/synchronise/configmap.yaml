@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bd-airports-configmap
+  namespace: go
+data:
+  STORAGE_EMULATOR_HOST: "http://fake-gcs-server:5000"
+  GCS_LOCALHOST_URL: "http://fake-gcs-server:8000/storage/v1/"
+  GCS_BUCKET_DOMAIN: "storage.googleapis.com"

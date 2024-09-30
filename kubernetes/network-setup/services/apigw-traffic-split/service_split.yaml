@@ -1,0 +1,29 @@
+# stable svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: bd-airports-v1-svc
+  namespace: go
+spec:
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: go
+---
+# canary svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: bd-airports-v2-svc
+  namespace: go
+spec:
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: go

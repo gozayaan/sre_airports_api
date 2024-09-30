@@ -1,0 +1,22 @@
+# GatewayClass
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: GatewayClass
+metadata:
+  name: kong
+  annotations:
+    konghq.com/gatewayclass-unmanaged: "true"
+spec:
+  controllerName: konghq.com/kic-gateway-controller
+---
+# Gateway
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: kong
+  namespace: go
+spec:
+  gatewayClassName: kong
+  listeners:
+    - name: proxy
+      port: 80
+      protocol: HTTP

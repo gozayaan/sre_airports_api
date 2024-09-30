@@ -1,0 +1,34 @@
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: bd-airports-http-route
+  namespace: go
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: kong
+  hostnames:
+    - "bd-airports.local"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix # or Exact
+            value: /airports
+          method: GET
+      backendRefs:
+        - name: bd-airports-v1-svc
+          kind: Service
+          port: 8080
+          weight: 80
+        - name: bd-airports-v2-svc
+          kind: Service
+          port: 8080
+          weight: 20
+          filters:
+            - type: URLRewrite
+              urlRewrite:
+                path:
+                  type: ReplaceFullPath
+                  replaceFullPath: /airports_v2

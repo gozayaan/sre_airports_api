@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bd-airports
+  namespace: go
+spec:
+  selector:
+    matchLabels:
+      app: go
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: go
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "17701"
+        prometheus.io/path: "/metrics/"
+    spec:
+      containers:
+        - image: bijoy26/bd-airports:v1.7
+          imagePullPolicy: Always
+          name: bd-airports
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: bd-airports-configmap
+          env:
+            - name: GCS_BUCKET_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: gcs-bucket-name-secret
+                  key: gcs-bucket-name
