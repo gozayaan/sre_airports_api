@@ -45,7 +45,6 @@ var airportsV2 = []AirportV2{
  
 const (
 	maxUploadFileSize = 10 * 1024 * 1024 // 10 MB
-	projectID  = "your-project-id"  // Set GCS PID
 )
 
 
@@ -114,17 +113,19 @@ func UpdateAirportImage(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "No airport matched", http.StatusNotFound)
 			return
 		}
-			
+
+		
 		// Initialize GCS client with mock GCS server
-		gcsclient, err := storage.NewClient(context.TODO(), option.WithEndpoint("http://localhost:8000/storage/v1/"))
+		gcsURL := os.Getenv("GCS_LOCALHOST_URL")
+		gcsclient, err := storage.NewClient(context.TODO(), option.WithEndpoint(gcsURL))
 		if err != nil {
 			log.Fatalf("failed to create GCS client: %v", err)
 			http.Error(w, "GCS client failure", http.StatusInternalServerError)
 		}
 		defer gcsclient.Close()
-	
+		
 		var objectList []string
-
+		
 		bucketName := os.Getenv("GCS_BUCKET_NAME")
 		
 		// iterate over existing bucket contents
@@ -168,9 +169,12 @@ func UpdateAirportImage(w http.ResponseWriter, r *http.Request) {
 
 		// Update existing URLs
 		// URL spec : https://storage.googleapis.com/<bucket-name>/<object-name>
-		uploadedImgURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, fileNameWithExt)
+
+		bucketDomain := os.Getenv("GCS_BUCKET_DOMAIN")
+		uploadedImgURL := fmt.Sprintf("https://%s/%s/%s", bucketDomain,bucketName, fileNameWithExt)
 		matched_airport.ImageURL = uploadedImgURL
 		airportsV2[indexV2].Airport.ImageURL = uploadedImgURL
+
 
 		// Respond with success/failure
 		fmt.Printf("🔸 V1 API data - Airport City:%v IATA:%v URL:%v", matched_airport.City, matched_airport.IATA, matched_airport.ImageURL)
