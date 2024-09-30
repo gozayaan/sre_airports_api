@@ -1,0 +1,83 @@
+pipeline{
+    agent any
+    environment{
+        DOCKERHUB_CREDENTIALS_USER = 'bijoy26'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds-user')
+        CODEBASE_REPO_BRANCH = 'main'
+        GITOPS_REPO_BRANCH = 'dev'
+        PREVIOUS_TAG = 'v1.6'
+        LATEST_TAG = 'v1.7'
+        CODEBASE_REPO = 'https://github.com/bijoy26/sre_airports_api.git'
+        GITOPS_REPO = 'https://github.com/bijoy26/bd-airports-manifests.git'
+        GITOPS_SVC_ACCOUNT = 'enter-gitops-email@domain.tld'
+        GITOPS_SVC_ACCOUNT_PAT = 'ENTER-CREDENTIAL-HERE'
+    }
+
+    stages{
+        stage('Checkout Latest Release from SCM'){
+            steps{
+                git branch: "${CODEBASE_REPO_BRANCH}", credentialsId: 'read-pat', url: "${CODEBASE_REPO}"
+            }
+        }
+        
+        stage('Build Container Artifacts for BD Airports API'){
+            steps{
+                script {
+                    env.GIT_BRANCH = sh([script: "git branch", returnStdout: true]).trim()
+                }
+                sh 'DOCKER_BUILDKIT=1 docker build -f ../Dockerfile -t bd-airports ../src'
+            }
+        }
+        
+        stage('Authenticate to Docker Hub Registry') {
+            steps {
+                sh 'echo $DOCKERHUB_CREDENTIALS | docker login -u $DOCKERHUB_CREDENTIALS_USER --password-stdin'
+            }
+        }
+
+        stage('Retag & Push Image to Registry'){
+            steps{
+                sh '''
+                docker tag bd-airports bijoy26/bd-airports:$LATEST_TAG'
+                docker push bijoy26/bd-airports:$LATEST_TAG
+                '''
+            }
+        }
+        
+        stage('Push Changes to GitOps Repository for Latest Release'){ 
+            steps{
+                deleteDir()
+                git branch: "${GITOPS_REPO_BRANCH}", credentialsId: 'write-pat', url: "${GITOPS_REPO}"
+                sh "/usr/bin/sed -i 's|bijoy26/bd-airports:$PREVIOUS_TAG|bijoy26/bd-airports:$LATEST_TAG|g' synchronise/deployment.yaml"
+                sh "git remote rm origin"
+                sh "git remote add origin https://'${GITOPS_SVC_ACCOUNT}':'${GITOPS_SVC_ACCOUNT_PAT}'@github.com/bijoy26/sre_airports_api"
+                sh "git add -A"
+                sh "git config user.email '${GITOPS_SVC_ACCOUNT}'"
+                sh "git config user.name '${GITOPS_SVC_ACCOUNT}'"
+                sh "git commit -m 'BUMP image tag $LATEST_TAG'"
+                sh "git push -u origin ${GITOPS_REPO_BRANCH}"
+            }
+        }
+        }
+    
+    post{
+        success{       
+          // Send Slack notification alert    
+           slackSend (
+                    color: "good",
+                    channel: '#ADD-SLACK-CHANNEL-NOTIFICATION-HERE', 
+                    message: "Build success for ${env.JOB_NAME} pipeline with #${env.BUILD_NUMBER} build from ${env.GIT_BRANCH} branch",
+                    tokenCredentialId: 'Slack-notifier',
+                )   
+        }
+          // Send Slack notification alert            
+        failure{
+            slackSend (
+                    color: "danger",
+                    channel: '#jenkins-slack-notification', 
+                    message: "Build failure for ${env.JOB_NAME} pipeline with #${env.BUILD_NUMBER} build from ${env.GIT_BRANCH} branch",
+                    tokenCredentialId: 'Slack-notifier',
+                )
+        }
+    }
+}
