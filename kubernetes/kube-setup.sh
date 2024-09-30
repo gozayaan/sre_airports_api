@@ -21,3 +21,9 @@ kubectl rollout restart -n NAMESPACE deployment DEPLOYMENT_NAME
 
 # Deploy HTTPRoute attached to the Kong APIGW for traffic split routing
 kubectl apply -f ./network-setup/kong-apigw/httproute.yaml
+
+# Deploy standard service (stable) for 100% /airports routing
+kubectl apply -f ./network-setup/services/apigw-traffic-split/service_split.yaml
+
+# Deploy traffic-split services (stable and canary) for 80:20 /airports_v2 routing
+kubectl apply -f ./network-setup/services/apigw-traffic-split/service_split.yaml

@@ -12,9 +12,9 @@ spec:
       name: http
       targetPort: 8080
       protocol: TCP
-  #    - port: 17701
-  #      name: metrics
-  #      protocol: TCP
+     - port: 17701
+       name: metrics
+       protocol: TCP
   selector:
     app: go
   type: LoadBalancer
