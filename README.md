@@ -148,55 +148,79 @@ pipeline{
 
 ### 2. Provision Object Storage
 
-**Google Cloud Storage** is a service for storing objects in Google Cloud.
+**Google Cloud Storage** is an _object storage service_ for storing data in Google Cloud Platform.
 
-[fake-gcs-server](https://github.com/fsouza/fake-gcs-server) is a GCS emulator & testing library for mock purpose.
+Here are two approaches to test buckets in GCS:
 
-#### Setting up Mock GCS object storage
+1. [Cloud: Provision GCS bucket using IaC](#21-provision-a-gcs-bucket-using-terraform)
+2. [Self-host: Spin-up Mock GCS instance using Docker](#22-setting-up-mock-gcs-object-storage)
 
-Use the [`./scripts/infra-spin-up.ps1`](scripts/infra-spin-up.ps1) PowerShell script if you are in Windows environment.
+#### 2.1 Provision a GCS bucket using Terraform
 
-Or you can manually spin-up the mock GCS instance using docker.
+**Terraform** is an _IaC (Infrastructure as Code_) tool that can automate the provisioning and management of GCS buckets in a replicable manner.
 
-```
+Install terraform and use the [`terraform.md`](iac/terraform.md) guide for bucket setup and [`/iac/provision.sh`](iac/provision.sh) script for reference purpose.
+
+#### 2.2 Setting up Mock GCS Object Storage
+
+> 💡 NOTE: For local development, it is useful to have mock / emulation servers at your disposal.
+
+To dev/test GCS functions such as bucket file upload in local machine, we can use [fake-gcs-server](https://github.com/fsouza/fake-gcs-server), which is a GCS emulator & testing library.
+
+Execute the [`/scripts/infra-spin-up.ps1`](scripts/infra-spin-up.ps1) PowerShell script if you are in Windows environment to have things ready.
+
+Or you can export `GCS_STORAGE_MOUNT_PATH` and spin-up the mock GCS instance using docker.
+
+Following command deploys an instance with HTTPS endpoint on `4443` and HTTP on `8000`.
+
+```bash
 docker run -d --name fake-gcs-server --network airport-net -p 4443:4443 -p 8000:8000 -v ${GCS_STORAGE_MOUNT_PATH}:/data fsouza/fake-gcs-server -scheme both -public-host localhost
 ```
 
-> NOTE: When in make sure to always use _container / service instance name_ (docker network / kube CNI) for initializing GCS client connection. Modify ENV variables according to that if required.
+> 💡 NOTE: Make sure to always use _container / service name_ (docker network / kube CNI) while initializing GCS client connection.
 
-### 4. Setup CD System & Deploy Application
+To quickstart, you can list bucket contents with `curl --insecure https://127.0.0.1:4443/storage/v1/b`
 
-Refer to [`pipeline/cd/argocd.md`](pipeline/cd/argocd.md) for guide on setting up the **continuous delivery** pipeline.
+### 3. Setup CD System & Deploy Application
 
-### 6. Sanity Test
+Refer to [`pipeline/cd/argocd.md`](pipeline/cd/argocd.md) for guide on setting up the **continuous delivery** pipeline with cloud-native solution ArgoCD.
+
+### 4. Sanity Test for Airport Image Update
 
 Attempt to upload an airport image to the go application's `/update_airport_image` endpoint.
+Since _**OSMANI INTERNATIONAL AIRPORT**_ value is passed as form data, it should be accepted by the server.
 
 <h1 align="center">
     <img alt="argo" src="static\1.jpeg" width="700px" />
     <br>
 </h1>
 
-Response received with image upload completion.
+**HTTP 200** Response received with image upload completion. Happy path is working. It will be rejected for a mismatch.
 
-### Check Container log
+To double check, we can inspect container logs.
+
+### Inspect Container log
 
 <h1 align="center">
     <img alt="argo" src="static\2.jpeg" width="650px" />
     <br>
 </h1>
 
-> 💡 NOTE: The uploaded object has been updated in both the datastores (v1 and v2). Also file upload is successful.
+> 💡 NOTE: The uploaded object has been updated in both the datastores (v1 and v2) and the file upload is successful.
 
-### 3. Configure API Gateway
+### 5. Configure API Gateway
 
 **Kong API Gateway** is a lightweight, fast, and flexible cloud-native gateway suitable for canary release.
 
 > Use the [`kubernetes/kube-setup.sh`](kubernetes/kube-setup.sh) for bootstrapping k8s associated networking objects, Kong API gateway necessities and object storage secrets.
 
-Now you can cURL a bunch of requests against kong gateway instance for simulating `80:20` traffic split into `/airports`:`/airports_v2` endpoint.
+Now, to test the API gateway, you can initiate a bunch of requests against gateway instance for simulating `80:20` traffic split into `/airports`:`/airports_v2` endpoints.
 
-### 7. TODO: Configure Monitoring
+```bash
+for x in $(seq 1 15); do curl -s --resolve bd-airports.local:80:<Ingress-Controller-IP> bd-airports.local/airports; done
+```
+
+### 6. TODO: Configure Monitoring
 
 - [] To-Do - Incorporate prometheus SDK for exposing application metrics including _response time_.
 
@@ -206,13 +230,15 @@ Now you can cURL a bunch of requests against kong gateway instance for simulatin
 
 ## 🏭 Environment Variables
 
-- **GCS_BUCKET_DOMAIN** : DNS name for \_Google Cloud Storage\* service i.e `storage.googleapis.com`
+- **GCS_BUCKET_DOMAIN** : DNS name for _Google Cloud Storage_ service i.e `storage.googleapis.com`
 
-- **GCS_LOCALHOST_URL** : For self-hosted fake-gcs-server running in port 8000, use `http://localhost:8000/storage/v1/`
+- **GCS_LOCALHOST_URL** : For self-hosted fake-gcs-server running in port 8000 (HTTP), use `http://localhost:8000/storage/v1/` to access from host machine or alternatively, use `http://fake-gcs-server:8000/storage/v1/` to access from docker / k8s network.
 
-- **GCS_BUCKET_NAME** : Specify bucket name like `storage.googleapis.com`
+- **GCS_BUCKET_NAME** : Specify bucket name like `bd-airport-data`
 
-- **GCS_STORAGE_MOUNT_PATH** : Specify filesystem source path for bucket to be mounted as a volume to GCS mock container
+- **GCS_STORAGE_MOUNT_PATH** : Specify host filesystem path for the storage volume to be mounted on the mock container
+
+- **GOOGLE_CLOUD_PROJECT** : For provisioning bucket using terraform, specify the ID of the project in which the resource belongs.
 
 ---
 
@@ -223,15 +249,6 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
 <details>
 	
 <summary> Click to expand</summary>
-
-- [x] write working function logic
-
-  - [x] parse the request to collect multiplart form data (filename and image)
-  - [x] sanity test successful image write in local FS
-
-    ```
-    curl -v  -X POST -H "Content-Type: multipart/form-data" -F "airport_name=Osmani International Airport" -F "airport_img=@/c/Users/ASUS/Desktop/az400.jpg" localhost:8080/update_airport_image
-    ```
 
 - [x] Explore and Setup GCS service
 
@@ -273,7 +290,6 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
 
       # from host machine
       curl --insecure https://127.0.0.1:4443/storage/v1/b # list buckets
-
       ```
 
     - [x] write a Go API upload / delete client to interact with the sample bucket
@@ -301,7 +317,16 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
 
 - [x] Write the actual image upload API as per instructions
 
-  - [x] test image upload functionality
+  - [x] write working function logic
+
+    - [x] parse the request to collect multiplart form data (filename and image)
+    - [x] test image upload functionality
+
+      - [x] sanity test successful image write in local FS
+
+        ```
+        curl -v  -X POST -H "Content-Type: multipart/form-data" -F "airport_name=Osmani International Airport" -F "airport_img=@/c/Users/ASUS/Desktop/az400.jpg" localhost:8080/update_airport_image
+        ```
 
 - [x] write Dockerfile and containerize
 
@@ -310,6 +335,8 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
     - tried different values of externalised env vars > no luck
     - tried modifying dockerfile to (easen up security) > no luck
     - take both containers under a new network with GCS referenced via container name > it works
+
+- summarize the local-build-push commands
 
   ```shell
   # docker-utilities
@@ -324,10 +351,20 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
   docker push hub.docker.com/bijoy26/bd-airports:v1.0
   ```
 
-- [x] Setup Kong API GW / Ingress to handle traffic split
+- [x] Setup API GW to handle traffic split
+
+  - [x] Explore available tools that support _canary release with weighted rewrites_
+    - [x] Check **Kong API Gateway** capabilties
+      - DBless mode with declarative approach
+        - [x] Check **canary release** plugin > not enough resource available for weighted canary
+        - [x] Check kong-native configurations > not enough resource available
+        - [x] Check Kong **HTTPRoute** capabilities for k8s gateway api > **URLRewrite** and **weight** properties available
+          - [x] Check HTTPRoute API spec for _weighted URLRewrite_ property > available > solution found
+
 - [x] Setup kube manifests
 - [x] Setup Jenkinsfile
-- [x] Setup terraform script
+- [x] Setup ArgoCD
+- [x] Setup terraform configuration
 
 </details>
 
