@@ -166,14 +166,14 @@ docker run -d --name fake-gcs-server --network airport-net -p 4443:4443 -p 8000:
 
 ### 4. Setup CD System & Deploy Application
 
-Refer to [`pipeline/cd/argocd.md`](pipeline\cd\argocd.md) for guide on setting up the **continuous delivery** pipeline.
+Refer to [`pipeline/cd/argocd.md`](pipeline/cd/argocd.md) for guide on setting up the **continuous delivery** pipeline.
 
 ### 6. Sanity Test
 
 Attempt to upload an airport image to the go application's `/update_airport_image` endpoint.
 
 <h1 align="center">
-    <img alt="argo" src="static\1.jpeg" width="600px" />
+    <img alt="argo" src="static\1.jpeg" width="700px" />
     <br>
 </h1>
 
@@ -182,11 +182,11 @@ Response received with image upload completion.
 ### Check Container log
 
 <h1 align="center">
-    <img alt="argo" src="static\2.jpeg" width="600px" />
+    <img alt="argo" src="static\2.jpeg" width="650px" />
     <br>
 </h1>
 
-The uploaded object has been updated in both the datastores (v1 and v2). Also file upload is successful.
+> 💡 NOTE: The uploaded object has been updated in both the datastores (v1 and v2). Also file upload is successful.
 
 ### 3. Configure API Gateway
 
@@ -200,7 +200,7 @@ Now you can cURL a bunch of requests against kong gateway instance for simulatin
 
 - [] To-Do - Incorporate prometheus SDK for exposing application metrics including _response time_.
 
-- [x] Deploy [`kubernetes/network-setup/services/apigw-transparent/service.yaml`](kubernetes\network-setup\services\apigw-transparent\service.yaml) service to scrape **response_time** metrics from `/metrics` endpoint exposed via port `17701`.
+- [x] Deploy [`kubernetes/network-setup/services/apigw-transparent/service.yaml`](kubernetes/network-setup/services/apigw-transparent/service.yaml) service to scrape **response_time** metrics from `/metrics` endpoint exposed via port `17701`.
 
 ---
 
@@ -312,6 +312,7 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
     - take both containers under a new network with GCS referenced via container name > it works
 
   ```shell
+  # docker-utilities
   DOCKER_BUILDKIT=1 docker build -f Dockerfile -t bd-airports .
 
   docker tag bd-airports hub.docker.com/bijoy26/bd-airports:v1.0
