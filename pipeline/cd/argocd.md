@@ -37,7 +37,7 @@ argocd cluster add <cluster-name>
 
 3. Settings > Repositories > Create a new repo and connect over HTTPS.
 
-> 💡 Note: This repo has to be the GitOps repo containing kube manifests
+> 💡 Note: This repo has to be the GitOps repo containing kube manifests for release. For this purpose, I'm using [`bijoy26/bd-airports-manifests`](https://github.com/bijoy26/bd-airports-manifests/tree/dev) repository.
 
 <h1 align="center">
     <img alt="argo" src="static\repo1.jpeg" width="480px" />
@@ -55,10 +55,14 @@ argocd cluster add <cluster-name>
     <br>
 </h1>
 
+Make sure to specify the `synchronise` subdirectory under repo root, where the manifests to be synched reside.
+
 <h1 align="center">
     <img alt="argo" src="static\app2.jpeg" width="480px" />
     <br>
 </h1>
+
+Specify the destination kube cluster's API server endpoint.
 
 <h1 align="center">
     <img alt="argo" src="static\app3.jpeg" width="400px" />

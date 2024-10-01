@@ -1,7 +1,9 @@
+# App namespace
 kubectl create ns go
 
 # GCS Mock Bucket
 kubectl create secret generic gcs-bucket-name-secret --from-literal=gcs-bucket-name="dev_bd_airport" -n go
+
 ###### Kong API Gateway Setup ######
 
 # Install k8s Gateway API CRD
@@ -23,7 +25,7 @@ kubectl rollout restart -n NAMESPACE deployment DEPLOYMENT_NAME
 kubectl apply -f ./network-setup/kong-apigw/httproute.yaml
 
 # Deploy standard service (stable) for 100% /airports routing
-kubectl apply -f ./network-setup/services/apigw-traffic-split/service_split.yaml
+kubectl apply -f ./network-setup/services/apigw-transparent/service.yaml
 
 # Deploy traffic-split services (stable and canary) for 80:20 /airports_v2 routing
 kubectl apply -f ./network-setup/services/apigw-traffic-split/service_split.yaml
