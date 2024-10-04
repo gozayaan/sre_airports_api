@@ -43,7 +43,7 @@
                       xxxxxxxxxx                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-## Table of Contents
+## 📜 Table of Contents
 
 - [Instructions](#-instructions): Guide to make the system up and running end-to-end.
 - [Environment Variables](#-environment-variables) : Reference sheet for environment variables used in the application
@@ -55,7 +55,7 @@
 
 ## 📃 Instructions
 
-### 1. Setup CI System
+### 1. 👨‍🍳 Setup CI System
 
 **Jenkins** is an open source automation server for reliable continuous integration.
 
@@ -153,7 +153,7 @@ pipeline{
 
 </details>
 
-### 2. Provision Object Storage
+### 2. 🧺 Provision Object Storage
 
 **Google Cloud Storage** is an _object storage service_ for storing data in Google Cloud Platform.
 
@@ -161,6 +161,9 @@ Here are two approaches to test buckets in GCS:
 
 1. [Cloud: Provision GCS bucket using IaC](#21-provision-a-gcs-bucket-using-terraform)
 2. [Self-host: Spin-up Mock GCS instance using Docker](#22-setting-up-mock-gcs-object-storage)
+
+> [!TIP]
+> 💡 For local development, it is useful to have mock / emulation servers at your disposal.
 
 #### 2.1 Provision a GCS bucket using Terraform
 
@@ -170,9 +173,6 @@ Here are two approaches to test buckets in GCS:
 > Install terraform and use the [`terraform.md`](iac/terraform.md) guide for bucket setup and [`/iac/provision.sh`](iac/provision.sh) script for reference purpose.
 
 #### 2.2 Setting up Mock GCS Object Storage
-
-> [!TIP]
-> 💡 For local development, it is useful to have mock / emulation servers at your disposal.
 
 To dev/test GCS functions such as bucket file upload in local machine, we can use [fake-gcs-server](https://github.com/fsouza/fake-gcs-server), which is a GCS emulator & testing library.
 
@@ -192,12 +192,14 @@ docker run -d --name fake-gcs-server --network airport-net -p 4443:4443 -p 8000:
 
 To quickstart, you can list bucket contents with `curl --insecure https://127.0.0.1:4443/storage/v1/b`
 
-### 3. Setup CD System & Deploy Application
+### 3. 🐙 Setup CD System & Deploy Application
+
+**Argo CD** is a declarative continuous delivery tool for Kubernetes.
 
 > [!IMPORTANT]
 > Refer to [`pipeline/cd/argocd.md`](pipeline/cd/argocd.md) for guide on setting up the **continuous delivery** pipeline with cloud-native solution ArgoCD.
 
-### 4. Sanity Test for Airport Image Update
+### 4. 🔨 Sanity Test for Airport Image Update
 
 Attempt to upload an airport image to the go application's `/update_airport_image` endpoint.
 
@@ -213,7 +215,7 @@ Attempt to upload an airport image to the go application's `/update_airport_imag
 
 To double check, we can inspect container logs.
 
-### Inspect Container log
+#### Inspect Container log
 
 <h1 align="center">
     <img alt="argo" src="static\2.jpeg" width="650px" />
@@ -223,7 +225,7 @@ To double check, we can inspect container logs.
 > [!NOTE]
 > 💡 The uploaded object has been updated in both the datastores (v1 and v2) and the file upload is successful.
 
-### 5. Configure API Gateway
+### 5. 🦍 Configure API Gateway
 
 **Kong API Gateway** is a lightweight, fast, and flexible cloud-native gateway suitable for canary release.
 
@@ -236,7 +238,7 @@ Now, to test the API gateway, you can initiate a bunch of requests against gatew
 for x in $(seq 1 15); do curl -s --resolve bd-airports.local:80:<Ingress-Controller-IP> bd-airports.local/airports; done
 ```
 
-### 6. TODO: Configure Monitoring
+### 6. 🔥 TODO: Configure Monitoring
 
 - [] To-Do - Incorporate prometheus SDK for exposing application metrics including _response time_.
 
