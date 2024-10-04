@@ -1,5 +1,10 @@
 # Airports API
 
+> [!IMPORTANT]
+> This repository can be treated as a solution to a set of take-away problems, where the problem definitions and requirements are described in the [`tasks`](tasks.md) section.
+
+**Airports API** is a lightweight API that provides information about airports of Bangladesh.
+
 ## System Architecture
 
 ```
@@ -161,15 +166,18 @@ Here are two approaches to test buckets in GCS:
 
 **Terraform** is an _IaC (Infrastructure as Code_) tool that can automate the provisioning and management of GCS buckets in a replicable manner.
 
-Install terraform and use the [`terraform.md`](iac/terraform.md) guide for bucket setup and [`/iac/provision.sh`](iac/provision.sh) script for reference purpose.
+> [!IMPORTANT]
+> Install terraform and use the [`terraform.md`](iac/terraform.md) guide for bucket setup and [`/iac/provision.sh`](iac/provision.sh) script for reference purpose.
 
 #### 2.2 Setting up Mock GCS Object Storage
 
-> 💡 NOTE: For local development, it is useful to have mock / emulation servers at your disposal.
+> [!TIP]
+> 💡 For local development, it is useful to have mock / emulation servers at your disposal.
 
 To dev/test GCS functions such as bucket file upload in local machine, we can use [fake-gcs-server](https://github.com/fsouza/fake-gcs-server), which is a GCS emulator & testing library.
 
-Execute the [`/scripts/infra-spin-up.ps1`](scripts/infra-spin-up.ps1) PowerShell script if you are in Windows environment to have things ready.
+> [!IMPORTANT]
+> Execute the [`/scripts/infra-spin-up.ps1`](scripts/infra-spin-up.ps1) PowerShell script if you are in Windows environment to have things ready.
 
 Or you can export `GCS_STORAGE_MOUNT_PATH` and spin-up the mock GCS instance using docker.
 
@@ -179,18 +187,22 @@ Following command deploys an instance with HTTPS endpoint on `4443` and HTTP on 
 docker run -d --name fake-gcs-server --network airport-net -p 4443:4443 -p 8000:8000 -v ${GCS_STORAGE_MOUNT_PATH}:/data fsouza/fake-gcs-server -scheme both -public-host localhost
 ```
 
-> 💡 NOTE: Make sure to always use _container / service name_ (docker network / kube CNI) while initializing GCS client connection.
+> [!TIP]
+> 💡 Make sure to always use _container / service name_ (docker network / kube CNI) while initializing GCS client connection.
 
 To quickstart, you can list bucket contents with `curl --insecure https://127.0.0.1:4443/storage/v1/b`
 
 ### 3. Setup CD System & Deploy Application
 
-Refer to [`pipeline/cd/argocd.md`](pipeline/cd/argocd.md) for guide on setting up the **continuous delivery** pipeline with cloud-native solution ArgoCD.
+> [!IMPORTANT]
+> Refer to [`pipeline/cd/argocd.md`](pipeline/cd/argocd.md) for guide on setting up the **continuous delivery** pipeline with cloud-native solution ArgoCD.
 
 ### 4. Sanity Test for Airport Image Update
 
 Attempt to upload an airport image to the go application's `/update_airport_image` endpoint.
-Since _**OSMANI INTERNATIONAL AIRPORT**_ value is passed as form data, it should be accepted by the server.
+
+> [!NOTE]
+> Since _**OSMANI INTERNATIONAL AIRPORT**_ value is passed as form data, it should be accepted by the server.
 
 <h1 align="center">
     <img alt="argo" src="static\1.jpeg" width="700px" />
@@ -208,13 +220,15 @@ To double check, we can inspect container logs.
     <br>
 </h1>
 
-> 💡 NOTE: The uploaded object has been updated in both the datastores (v1 and v2) and the file upload is successful.
+> [!NOTE]
+> 💡 The uploaded object has been updated in both the datastores (v1 and v2) and the file upload is successful.
 
 ### 5. Configure API Gateway
 
 **Kong API Gateway** is a lightweight, fast, and flexible cloud-native gateway suitable for canary release.
 
-> Use the [`kubernetes/kube-setup.sh`](kubernetes/kube-setup.sh) for bootstrapping k8s associated networking objects, Kong API gateway necessities and object storage secrets.
+> [!IMPORTANT]
+> 💡 Use the [`kubernetes/kube-setup.sh`](kubernetes/kube-setup.sh) for bootstrapping k8s associated networking objects, Kong API gateway necessities and object storage secrets.
 
 Now, to test the API gateway, you can initiate a bunch of requests against gateway instance for simulating `80:20` traffic split into `/airports`:`/airports_v2` endpoints.
 
@@ -382,6 +396,8 @@ I tend to log my progress when I approach a problem for solution. Here are raw n
 - k8s Gateway API HTTPRoute Ref - https://gateway-api.sigs.k8s.io/api-types/httproute/
 - HTTPRoute API Spec - https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1.HTTPRouteFilter
 - HTTRoute RewriteURL - https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/
+
+---
 
 ## 🙏 Courtesy
 
